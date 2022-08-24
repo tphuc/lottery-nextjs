@@ -1,4 +1,4 @@
-import { amber, amberDark, blackA, indigo, orange, orangeDark, purple, violet, whiteA } from '@radix-ui/colors'
+import { amber, amberDark, blackA, indigo, mauve, orange, orangeDark, purple, violet, whiteA } from '@radix-ui/colors'
 import { styled } from '@stitches/react'
 import Head from 'next/head'
 import Image from 'next/image'
@@ -15,6 +15,85 @@ import { useContract, useGetAffiliatePercentage, useGetCurrentGameNumber, useGet
 import { contractABI, contractAddress } from '../contract.config'
 import ReactConfetti from 'react-confetti';
 import useWindowSize from 'react-use/lib/useWindowSize'
+
+
+import {  keyframes } from '@stitches/react';
+
+import * as AlertDialogPrimitive from '@radix-ui/react-alert-dialog';
+
+const overlayShow = keyframes({
+  '0%': { opacity: 0 },
+  '100%': { opacity: 1 },
+});
+
+const contentShow = keyframes({
+  '0%': { opacity: 0, transform: 'translate(-50%, -48%) scale(.96)' },
+  '100%': { opacity: 1, transform: 'translate(-50%, -50%) scale(1)' },
+});
+
+const StyledOverlay = styled(AlertDialogPrimitive.Overlay, {
+  backgroundColor: blackA.blackA9,
+  position: 'fixed',
+  inset: 0,
+  '@media (prefers-reduced-motion: no-preference)': {
+    animation: `${overlayShow} 150ms cubic-bezier(0.16, 1, 0.3, 1)`,
+  },
+});
+
+const StyledContent = styled(AlertDialogPrimitive.Content, {
+  backgroundColor: 'white',
+  borderRadius: 6,
+  boxShadow: 'hsl(206 22% 7% / 35%) 0px 10px 38px -10px, hsl(206 22% 7% / 20%) 0px 10px 20px -15px',
+  position: 'fixed',
+  top: '50%',
+  left: '50%',
+  transform: 'translate(-50%, -50%)',
+  width: '90vw',
+  maxWidth: '500px',
+  maxHeight: '85vh',
+  padding: 25,
+  '@media (prefers-reduced-motion: no-preference)': {
+    animation: `${contentShow} 150ms cubic-bezier(0.16, 1, 0.3, 1)`,
+  },
+  '&:focus': { outline: 'none' },
+});
+
+function Content({ children, ...props }) {
+  return (
+    <AlertDialogPrimitive.Portal>
+      <StyledOverlay />
+      <StyledContent {...props}>{children}</StyledContent>
+    </AlertDialogPrimitive.Portal>
+  );
+}
+
+const StyledTitle = styled(AlertDialogPrimitive.Title, {
+  margin: 0,
+  color: mauve.mauve12,
+  fontSize: 17,
+  fontWeight: 500,
+});
+
+const StyledDescription = styled(AlertDialogPrimitive.Description, {
+  marginBottom: 20,
+  color: mauve.mauve11,
+  fontSize: 15,
+  lineHeight: 1.5,
+});
+
+// Exports
+export const AlertDialog = AlertDialogPrimitive.Root;
+export const AlertDialogTrigger = AlertDialogPrimitive.Trigger;
+export const AlertDialogContent = Content;
+export const AlertDialogTitle = StyledTitle;
+export const AlertDialogDescription = StyledDescription;
+export const AlertDialogAction = AlertDialogPrimitive.Action;
+export const AlertDialogCancel = AlertDialogPrimitive.Cancel;
+
+// Your app...
+const Flex = styled('div', { display: 'flex' });
+
+
 
 const MAX = 9999999999
 const Container = styled('div', {
@@ -44,7 +123,6 @@ export default function Home() {
   const [secret, setSecret] = useState('');
 
   const [playConffeti, setPlayConffeti] = useState(false);
-
   const { data: gameID } = useGetCurrentGameNumber()
   const { data: participants } = useGetCurrentLotteryParticipants()
   const { data: affiliatePercen } = useGetAffiliatePercentage()
@@ -53,9 +131,19 @@ export default function Home() {
   const { data: isSubmitted } = useGetIsSubmittedSecret()
   const { data: endingTime } = useGetLotteryEndingTime()
   const { data: lotteryHistory } = useGetLotteryHistory();
+ 
   const isAvailableToJoin = new Date(endingTime).getTime() > new Date().getTime();
-  const { width, height } = useWindowSize()
 
+  React.useEffect(() => {
+    if(lotteryHistory?.length){
+      var lastLottery = lotteryHistory[0]
+      if(lastLottery?.timestamp + 100000 - new Date().getTime() >= 0){
+        setPlayConffeti(true)
+        alert('Congrats, you won previous lottery!')
+      }
+    }
+    
+  }, [lotteryHistory])
 
   console.log(new Date(endingTime), isAvailableToJoin, address)
 
@@ -108,10 +196,12 @@ export default function Home() {
     winner,
     affiliateAmount,
     winningPrice) => {
-
-      if(winner == address){
-        setPlayConffeti(true)
-      }
+      console.log('end', winner,
+        affiliateAmount,
+        winningPrice)
+    if (winner == address) {
+      setPlayConffeti(true)
+    }
   }
 
 
@@ -259,7 +349,7 @@ export default function Home() {
           }}>
             <span key={`item ${id}`}>#{item.id + 1}</span>
             <span key={`date ${id}`}> {item?.timestamp ? new Date(item?.timestamp).toLocaleString() : '-'}</span>
-            <span key={`address ${id}`}>{item.winner ? item.winner : '-'}</span>
+            <span key={`address ${id}`}>{item.winner != '0x0000000000000000000000000000000000000000' ? truncateEthAddress(item.winner) : '-'}</span>
           </Box>)}
         </Box>
 
@@ -278,9 +368,11 @@ export default function Home() {
           {/* <p style={{fontSize:"1.2em", fontWeight:300}}>Krypto Lottery is the digitized version of the traditional lottery system. Secure, transparent, randomness verifiable living on Polygon blockchain.</p> */}
         </Box>
       </Box>
-      {playConffeti && <Box style={{ width: "100%", height: "100%", display: "flex", justifyContent: "center" }}>
-        <ReactConfetti width={width} height={height} />
+      {playConffeti && <Box style={{ position:"absolute", top:0, left:0, width: "100vw", height: "100vh", overflow:"hidden", display: "flex", justifyContent: "center" }}>
+        <ReactConfetti width={1000} height={800} />
       </Box>}
+
+      
 
     </Container >
   )

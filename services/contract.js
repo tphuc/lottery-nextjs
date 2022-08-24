@@ -161,10 +161,9 @@ export const useGetLotteryHistory = () => {
             
         let res = await Promise.all([...Array(currentGameId).keys()].map(async (id) => {
             let currentLottery = await contract.lotteries(id+1);
-            console.log(id, currentLottery)
             return {
                 id,
-                winnder: currentLottery.winner?.toString(),
+                winner: currentLottery.winner?.toString(),
                 timestamp: currentLottery.resultTime?.toNumber() * 1000
             }
         }))
