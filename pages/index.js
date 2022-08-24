@@ -113,7 +113,7 @@ export default function Home() {
 
   const [address, setAddress] = useState()
   const { data: contract } = useContract();
-  console.log(contract)
+
 
 
 
@@ -136,8 +136,10 @@ export default function Home() {
 
   React.useEffect(() => {
     if(lotteryHistory?.length){
-      var lastLottery = lotteryHistory[0]
-      if(lastLottery?.timestamp + 100000 - new Date().getTime() >= 0){
+      var lastLottery = lotteryHistory[lotteryHistory?.length - 2]
+      console.log(lotteryHistory, lastLottery?.timestamp + 120000 - new Date().getTime())
+      if(lastLottery?.timestamp + 120000 - new Date().getTime() >= 0){
+       
         setPlayConffeti(true)
         alert('Congrats, you won previous lottery!')
       }
@@ -145,7 +147,7 @@ export default function Home() {
     
   }, [lotteryHistory])
 
-  console.log(new Date(endingTime), isAvailableToJoin, address)
+
 
   const conntectToWallet = async () => {
     if (!window.ethereum) {

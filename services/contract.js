@@ -167,6 +167,8 @@ export const useGetLotteryHistory = () => {
                 timestamp: currentLottery.resultTime?.toNumber() * 1000
             }
         }))
+
+        res = res.sort((a, b) => a.id > b.id)
         // const provider = new ethers.providers.Web3Provider(window.ethereum)
         // const contract = new ethers.Contract(contractAddress, contractABI, provider);
         // let res = await contract.isWalletSubmittedHash()
